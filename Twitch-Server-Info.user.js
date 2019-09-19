@@ -223,7 +223,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         ["pdx", "US West: Portland, Oregon"],
         ["sfo", "US West: San Francisco, CA"],
         ["sjc", "US West: San Jose,CA"],
-        ["akamai", "Akamai"]
+        ["akamai", "Akamai"],
     ];
 
     // 스타일 추가
@@ -300,9 +300,10 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     // 서버 자동으로 설정하기 전략
                     // 1. 본 블록 안에서 fetch 된 데이터를 미리 읽어서
                     // 2. segmenet 의 서버를 확인하고
-                    // 3-1. 원하는 서버이면 리턴하고
+                    // 3-1. 원하는 서버이면 거기서 fetch 를 멈추고
                     // 3-2. 원하지 않는 서버이면 originalFetch 를 이용해서
                     //      원하는 서버가 잡힐 때 까지 1~3 을 반복한다.
+                    // 4. blob 만들어서 주소를 arguments[0] 에 넣어서 originalFetch 에 넘기며 리턴한다.
 
                     return originalFetch.apply(this, arguments);
                 };
@@ -359,10 +360,18 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             // 서버 이름 매칭하기
                             var server_str = current_server.split(".")[0];
                             var server_name = "";
-                            for (var i = 0; i < server_list_2.length; i++) {
-                                if (server_str.indexOf(server_list_2[i][0]) !== -1) {
-                                    server_name = "<br />(" + server_list_2[i][0].toUpperCase() + " / " + server_list_2[i][1] + ")";
-                                    break;
+                            
+                            // case 1: akamai 의 경우
+                            if(current_server.indexOf("akamai") !== -1){
+                                server_name = "<br />(Akamai)";
+                            }
+                            // case 2: 그 외
+                            else {
+                                for (var i = 0; i < server_list_2.length; i++) {
+                                    if (server_str.indexOf(server_list_2[i][0]) !== -1) {
+                                        server_name = "<br />(" + server_list_2[i][0].toUpperCase() + " / " + server_list_2[i][1] + ")";
+                                        break;
+                                    }
                                 }
                             }
 
