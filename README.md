@@ -10,7 +10,7 @@
 ## Install
 #### STEP 1. ScriptManager
 자신의 브라우저에 맞는 유저스크립트 관리 확장기능 설치
-<br />동작 테스트는 Chrome 브라우저에서만 했습니다.
+<br />(동작 테스트는 Chrome 브라우저에서만 했습니다.)
 - Firefox - [Tampermonkey](https://addons.mozilla.org/ko/firefox/addon/tampermonkey/)
 - Chrome - [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=ko)
 - Opera - [Tampermonkey](https://addons.opera.com/extensions/details/tampermonkey-beta/)
@@ -23,7 +23,7 @@
 > ##### 주의: 본 스크립트를 설치 및 사용하며 브라우저 과부하로 인한 응답 없음/뻗음 등 으로 인한 데이터 손실 등 문제 발생 시 개발자는 책임지지 않음(보고된 문제는 없음)
 > ##### Twitch 접속에 문제가 생기거나 동영상 재생이 안 되는 문제 등이 발생하는 경우, Tampermonkey 의 관리 메뉴에서 이 스크립트를 끄거나 삭제해주세요.
 
-## Install
+## Bug report
 버그 많음 버그리포트 바랍니다 (__) nomotg@gmail.com
 
 ## Change log

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.1
+// @version     0.0.2
 // @author      nomo
 // @description Check Twitch server location.
 // @supportURL  https://github.com/nomomo/Twitch-Server-Info/issues
@@ -89,7 +89,16 @@ if (window.TWITCH_SERVER_INFO === undefined) {
     var nomo_global = {
         "DEBUG": (typeof GM_getValue === "function" ? GM_getValue("DEBUG", false) : false),
         "LOGGING": (typeof GM_getValue === "function" ? GM_getValue("LOGGING", false) : false),
+        "FIXER": (typeof GM_getValue === "function" ? GM_getValue("FIXER", false) : false),
+        "FIXER_SERVER": (typeof GM_getValue === "function" ? GM_getValue("FIXER_SERVER", "sel") : "sel"),
+        "FIXER_ATTEMPT_MAX": (typeof GM_getValue === "function" ? GM_getValue("FIXER_ATTEMPT_MAX", 10) : 10),
         "prev_server": ""
+    };
+    unsafeWindow.TWITCH_SERVER_INFO_SET_VAL = function (name, val) {
+        if (typeof GM_setValue === "function") {
+            GM_setValue(name, val);
+        }
+        return val;
     };
 
     // 디버그 모드를 전환하려면 console 창에 TWITCH_SERVER_INFO_DEBUG() 를 붙여넣기 하세요.
@@ -235,7 +244,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             right:18px;
             text-align:right;
             font-size:11px;
-            ${typeof GM_setClipboard === "function" ? 
+            ${typeof GM_setClipboard === "function" ?
             `user-select: text;
             cursor: pointer;` : ``}
         }
@@ -291,11 +300,23 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         // blob 다시쓰기
         var workerBlob = new Blob(
             [`
+                // global 변수 가져오기
+                const FIXER = ${nomo_global.FIXER};
+                const FIXER_SERVER = "${nomo_global.FIXER_SERVER}";
+                const FIXER_ATTEMPT_MAX = ${nomo_global.FIXER_ATTEMPT_MAX};
+                var FIXER_count = 0;
+                var FIXED = false;
+                var FIXED_SERVER = undefined;
+                function sleep (delay) {
+                    var start = new Date().getTime();
+                    while (new Date().getTime() < start + delay);
+                }
+
                 // Worker 내부의 fetch 함수 탈취 & 덮어쓰기
                 const originalFetch = self.fetch;
-                self.fetch = function(input, init){
+                self.fetch = async function(input, init){
                     // Worker 밖으로 메시지 보내기
-                    postMessage({"id":0,"type":"tsi","arg":input});
+                    postMessage({"id":0,"type":"tsi","arg":input,"fixed":{"FIXED":FIXED,"FIXER_count":FIXER_count}});
 
                     // 서버 자동으로 설정하기 전략
                     // 1. 본 블록 안에서 fetch 된 데이터를 미리 읽어서
@@ -304,7 +325,63 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     // 3-2. 원하지 않는 서버이면 originalFetch 를 이용해서
                     //      원하는 서버가 잡힐 때 까지 1~3 을 반복한다.
                     // 4. blob 만들어서 주소를 arguments[0] 에 넣어서 originalFetch 에 넘기며 리턴한다.
+                    if(FIXER && FIXER_SERVER !== undefined && input.indexOf('usher.ttvnw.net/api/channel/hls') !== -1){
+                        FIXED = false;
+                        FIXER_count = 0;
+                        console.log("첫 채널 접속 시 URL 감지됨", input);
+                        
+                        // 반복 시작
+                        while(!FIXED && FIXER_count < FIXER_ATTEMPT_MAX){
+                            console.log("서버 자동 잡기 시도 중...");
+                            console.log("현재 시도 수", (FIXER_count + 1) + " / " + FIXER_ATTEMPT_MAX);
 
+                            var m3u8_fetch = await originalFetch.apply(this, arguments);
+                            var m3u8_text = await m3u8_fetch.text();
+                            // console.log("m3u8_text", m3u8_text);
+
+                            // 클러스터 문구 존재하는지 확인
+                            var text_split;
+                            // 클러스터 문구 존재하면 추출
+                            if((/CLUSTER=/).test(m3u8_text)){
+                                text_split = m3u8_text.split("CLUSTER=")[1].split(",")[0].replace(/"/g,'');
+                                console.log("클러스터 문구 존재", text_split);
+                            }
+                            // 클러스터 문구 존재하지 않으면 재시도 (continue)
+                            else{
+                                console.log("CLUSTER 문구가 존재하지 않음, 재시도");
+                                FIXER_count = FIXER_count + 1;
+                                continue;
+                            }
+
+                            // 원하는 서버를 찾은 경우
+                            if(text_split.indexOf(FIXER_SERVER) !== -1){
+                                FIXED = true;
+                                console.log("원하는 서버를 찾았다", FIXER_SERVER, text_split);
+                                
+                                // blob 로 만들어서 리턴한다.
+                                var m3u8_blob = new Blob([m3u8_text], {
+                                    type: 'text/plain'
+                                });
+                                var m3u8_blob_url = URL.createObjectURL(m3u8_blob);
+
+                                var new_arg = arguments;
+                                new_arg[0] = m3u8_blob_url;
+                                console.log("step2", m3u8_blob_url);
+                                return originalFetch.apply(this, new_arg);
+                            }
+
+                            // 원하는 서버를 찾지 못한 경우
+                            console.log("원하는 서버를 찾지 못했다", FIXER_SERVER, text_split);
+                            FIXER_count = FIXER_count + 1;
+                            continue;
+
+                            // 200ms 간격으로 재시도
+                            sleep(200);
+                            
+                        }   // while 문 끝
+                    }   // 반복을 위한 if 문 끝
+
+                    // console.log("리턴");
                     return originalFetch.apply(this, arguments);
                 };
 
@@ -329,8 +406,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                 NOMO_DEBUG('Message received from worker', e.data);
 
                 var msg_arg = e.data.arg;
-                // 아래처럼 확인하면 채널 첫 접속 시 .m3u8 파일이 걸러진다.
-                if (msg_arg.indexOf('usher.ttvnw.net/api/channel/hls') !== -1) {
+                // 아래처럼 확인하면 채널 첫 접속 시 .m3u8 파일과 vod 재생 시 주소가 걸러진다.
+                if (msg_arg.indexOf('usher.ttvnw.net/api/channel/hls') !== -1 || msg_arg.indexOf('usher.ttvnw.net/vod/') !== -1) {
                     // 기존 DOM을 지운다.
                     $("#current_server").remove();
                     nomo_global.prev_server = "";
@@ -360,13 +437,9 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             // 서버 이름 매칭하기
                             var server_str = current_server.split(".")[0];
                             var server_name = "";
-                            
-                            // case 1: akamai 의 경우
-                            if(current_server.indexOf("akamai") !== -1){
+                            if (current_server.indexOf("akamai") !== -1) {
                                 server_name = "<br />(Akamai)";
-                            }
-                            // case 2: 그 외
-                            else {
+                            } else {
                                 for (var i = 0; i < server_list_2.length; i++) {
                                     if (server_str.indexOf(server_list_2[i][0]) !== -1) {
                                         server_name = "<br />(" + server_list_2[i][0].toUpperCase() + " / " + server_list_2[i][1] + ")";
@@ -375,7 +448,15 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                 }
                             }
 
-                            var dom_string = current_server + server_name;
+                            var fixed_string = "";
+                            if (nomo_global.FIXER) {
+                                if (e.data.fixed.FIXED) {
+                                    fixed_string = "Server fix succeeded (" + e.data.fixed.FIXER_count + ") <br />";
+                                } else {
+                                    fixed_string = "Server fix failed (" + e.data.fixed.FIXER_count + ") <br />";
+                                }
+                            }
+                            var dom_string = fixed_string + current_server + server_name;
 
                             // 로깅 하기
                             if (nomo_global.LOGGING && typeof GM_getValue === "function" && typeof GM_setValue === "function") {
@@ -412,7 +493,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                     .fadeIn(500)
                                     .on("click", function () {
                                         if (typeof GM_setClipboard === "function") {
-                                            GM_setClipboard(dom_string.replace("<br />", ""));
+                                            GM_setClipboard((current_server + server_name).replace("<br />", " "));
 
                                             $("#copied").remove();
                                             $(`<span id="copied" style="display:none">Copied!!</span>`)
