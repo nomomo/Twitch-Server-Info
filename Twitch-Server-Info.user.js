@@ -116,7 +116,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         "DEBUG_FETCH": NOMO_getValue("DEBUG_FETCH", false),
         "LOGGING": NOMO_getValue("LOGGING", false),
         "FIXER": NOMO_getValue("FIXER", false),
-        "FIXER_SERVER": NOMO_getValue("FIXER_SERVER", ["sel", "akamai"]),
+        "FIXER_SERVER": NOMO_getValue("FIXER_SERVER", ["sel"]),
         "FIXER_ATTEMPT_MAX": NOMO_getValue("FIXER_ATTEMPT_MAX", 10),
         "FIXER_DELAY": NOMO_getValue("FIXER_DELAY", 500),
         "prev_server": ""
