@@ -100,6 +100,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
     const LOGGING_MAX = 1000;
     const FIXER_DELAY_MIN = 250;
     var SETTIMEOUT_FIXED_FAILED = undefined;
+    var SETTIMEOUT_FIXER_EGG = undefined;
+    var FIXER_EGG_COUNT = 0;
 
     var NOMO_getValue = function (name, val) {
         return (typeof GM_getValue === "function" ? GM_getValue(name, val) : val);
@@ -174,7 +176,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
     };
 
     unsafeWindow.TWITCH_SERVER_INFO_FIXER = function () {
-        return TWITCH_SERVER_INFO_SWITCH_VAL("FIXER");
+        return TWITCH_SERVER_INFO_SET_VAL("FIXER", !nomo_global.FIXER);
     };
 
     // 서버 리스트 1 - 현재 사용 안 함
@@ -627,6 +629,19 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                                 });
                                         }
 
+                                        // ????
+                                        FIXER_EGG_COUNT = FIXER_EGG_COUNT + 1;
+                                        clearTimeout(SETTIMEOUT_FIXER_EGG);
+                                        SETTIMEOUT_FIXER_EGG = setTimeout(function(){
+                                            NOMO_DEBUG("FIXER_EGG_COUNT", FIXER_EGG_COUNT);
+                                            if(FIXER_EGG_COUNT === 7){
+                                                NOMO_DEBUG("FIXER EGG");
+                                                TWITCH_SERVER_INFO_FIXER();
+                                                $(".FIXER_EGG").remove();
+                                                $(`<span class="FIXER_EGG"><br />FIXER ${nomo_global.FIXER ? "ON" : "OFF"}!!! Please refresh.</span>`).appendTo("#current_server");
+                                            }
+                                            FIXER_EGG_COUNT = 0;
+                                        },1000);
                                     });
                             } // DOM 생성 끝
                         } // 기존에 가져온 서버 이름과 동일한지 체크 끝
