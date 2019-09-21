@@ -10,7 +10,7 @@
 ## Install
 #### STEP 1. ScriptManager
 자신의 브라우저에 맞는 유저스크립트 관리 확장기능 설치
-<br />(동작 테스트는 Chrome 브라우저에서만 했습니다.)
+<br />(동작 테스트는 Chrome, Firefox 에서만 했습니다.)
 - Firefox - [Tampermonkey](https://addons.mozilla.org/ko/firefox/addon/tampermonkey/)
 - Chrome - [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=ko)
 - Opera - [Tampermonkey](https://addons.opera.com/extensions/details/tampermonkey-beta/)
@@ -27,6 +27,8 @@
 버그 많음 버그리포트 바랍니다 (__) nomotg@gmail.com
 
 ## Change log
+### 0.0.3 (2019-09-21)
+- 디버그 및 테스트 용 기능 추가
 ### 0.0.2 (2019-09-20)
 - Live 시청 후 VOD 재생 화면으로 넘어갈 경우, 서버 표시 문구를 지우도록 수정
 ### 0.0.1 (2019-09-19)
