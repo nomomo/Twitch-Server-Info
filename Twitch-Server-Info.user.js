@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.3
+// @version     0.0.4
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -117,7 +117,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         "LOGGING": NOMO_getValue("LOGGING", false),
         "FIXER": NOMO_getValue("FIXER", false),
         "FIXER_SERVER": NOMO_getValue("FIXER_SERVER", ["sel"]),
-        "FIXER_ATTEMPT_MAX": NOMO_getValue("FIXER_ATTEMPT_MAX", 10),
+        "FIXER_ATTEMPT_MAX": NOMO_getValue("FIXER_ATTEMPT_MAX", 15),
         "FIXER_DELAY": NOMO_getValue("FIXER_DELAY", 500),
         "prev_server": ""
     };
@@ -265,6 +265,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
     if (typeof GM_addStyle === "function") {
         GM_addStyle( /*css*/ `
             #current_server{
+                color:#fff;
                 z-index:10;
                 position:absolute;
                 bottom:42px;
@@ -298,6 +299,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             }
 
             #fixer_loader .loader_text{
+                color:#fff;
                 margin-top:0px;
                 font-size:1.5em;
                 color:#fff;
@@ -324,8 +326,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             -webkit-transform: translateZ(0);
             -ms-transform: translateZ(0);
             transform: translateZ(0);
-            -webkit-animation: load8 1.1s infinite linear;
-            animation: load8 1.1s infinite linear;
+            -webkit-animation: load8 0.5s infinite linear;
+            animation: load8 0.5s infinite linear;
             }
             @-webkit-keyframes load8 {
             0% {
@@ -445,7 +447,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             // NOMO_DEBUG("m3u8_text", m3u8_text);
 
                             // error 발생하는지 확인
-                            if(m3u8_text.indexOf("error_code") !== -1){
+                            if(m3u8_text.indexOf("error_code") !== -1 || m3u8_text.indexOf("Can not fi") !== -1){
                                 NOMO_DEBUG("에러 발생, 중지", {m3u8_text});
                                 break;
                             }
@@ -530,6 +532,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     // 기존 DOM을 지운다.
                     $("#current_server").remove();
                     nomo_global.prev_server = "";
+                    nomo_global.prev_server_list = [];
                 }
                 // 아래처럼 확인하면 segment 를 받아오기 위한 .m3u8 파일과 .ts 파일이 걸러진다.
                 // if (msg_arg.indexOf('.hls.ttvnw.net') !== -1) {
@@ -563,6 +566,19 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                 }
                             }
 
+                            // 서버 바뀐 경우, 이력 표시 (현재 디버그 중)
+                            var server_change_history = "";
+                            if(nomo_global.DEBUG){
+                                nomo_global.prev_server_list.push(server_str);
+                                if (nomo_global.prev_server_list.length > 5) {
+                                    nomo_global.prev_server_list = nomo_global.prev_server_list.slice(nomo_global.prev_server_list.length - 5);
+                                }
+                                if(nomo_global.prev_server !== "" && nomo_global.prev_server !== current_server){
+                                    server_change_history = "<br />" + server_change_history.join(" → ");
+                                }
+                                NOMO_DEBUG("서버 리스트 갱신", nomo_global.prev_server_list);
+                            }
+
                             // FIXER 에서 연결 시도 횟수 표시
                             var fixed_string = "";
                             if (nomo_global.FIXER) {
@@ -572,7 +588,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                     fixed_string = "(" + e.data.fixed.FIXER_count + "/" + nomo_global.FIXER_ATTEMPT_MAX + ") <br />";
                                 }
                             }
-                            var dom_string = fixed_string + current_server + server_name;
+                            var dom_string = fixed_string + current_server + server_name + server_change_history;
 
                             // 로깅 하기
                             try {
@@ -605,7 +621,10 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             }
 
                             // DOM 생성
-                            var $player_menu = $(document).find(".player-buttons-right");
+                            var $player_menu = $(document).find(".player-buttons-right");    // for embeded player, old twitch player
+                            if($player_menu.length === 0){
+                                $player_menu = $(document).find(".player-controls__right-control-group");   // for new twitch player
+                            }
                             if ($player_menu.length !== 0) {
                                 $(".player-buttons-right").find(".player-tip").css("z-index", 60);
                                 $("#current_server").remove();
@@ -635,10 +654,25 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                         SETTIMEOUT_FIXER_EGG = setTimeout(function(){
                                             NOMO_DEBUG("FIXER_EGG_COUNT", FIXER_EGG_COUNT);
                                             if(FIXER_EGG_COUNT === 7){
-                                                NOMO_DEBUG("FIXER EGG");
+                                                NOMO_DEBUG("FIXER EGG 7");
                                                 TWITCH_SERVER_INFO_FIXER();
                                                 $(".FIXER_EGG").remove();
                                                 $(`<span class="FIXER_EGG"><br />FIXER ${nomo_global.FIXER ? "ON" : "OFF"}!!! Please refresh.</span>`).appendTo("#current_server");
+                                            }
+                                            else if(FIXER_EGG_COUNT === 8){
+                                                NOMO_DEBUG("FIXER EGG 8");
+                                                var FIXER_SERVER_PROMPT = prompt("고정할 서버(Target Server)에 포함된 문자열을 콤마로 구분하여 입력하세요.\n영문,숫자만 입력할 수 있습니다.\n예시1) sel, akamai\n예시2) sel03", nomo_global.FIXER_SERVER.join(", "));
+                                                if(FIXER_SERVER_PROMPT === null){
+                                                    NOMO_DEBUG("취소됨");
+                                                }
+                                                else if (FIXER_SERVER_PROMPT === ""){
+                                                    TWITCH_SERVER_INFO_SET_VAL("FIXER_SERVER", []);
+                                                }
+                                                else{
+                                                    FIXER_SERVER_PROMPT = FIXER_SERVER_PROMPT.toLowerCase().replace(/[\{\}\[\]\/?.;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"\s]/gi, "").split(",");
+                                                    TWITCH_SERVER_INFO_SET_VAL("FIXER_SERVER", FIXER_SERVER_PROMPT);
+                                                    NOMO_DEBUG("FIXER_SERVER_PROMPT", FIXER_SERVER_PROMPT);
+                                                }
                                             }
                                             FIXER_EGG_COUNT = 0;
                                         },1000);
@@ -657,7 +691,10 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                 }
 
                 // LOADER DOM 생성
-                var $player_root = $(document).find(".player-root");
+                var $player_root = $(document).find(".player-root");    // for embeded player, old twitch player
+                if($player_root.length === 0){
+                    $player_root = $(document).find(".highwind-video-player__container");   // for new twitch player
+                }
                 if ($player_root.length !== 0) {
                     $("#fixer_loader").remove();
                     // fix 실패 시
@@ -684,6 +721,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     }
                 }
             }
+            // else if(e.data.arg.name !== "enqueue" && e.data.arg.name !== "remove"){console.log(e.data.arg)}
         };
 
         ////////////////////////////////////////////////////////////////////////////////////
