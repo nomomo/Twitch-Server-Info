@@ -7,8 +7,10 @@
 
 ![](https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/preview.png)
 
-Live 시청 중 서버가 변경되는 경우 작은 팝업으로 알리고, 서버 변경 이력을 표시합니다. (MAX 3개)
-<br />팝업은 15초동안 표시되며 클릭 시 바로 꺼집니다.
+
+Live 시청 중 서버가 자동 변경되는 경우 작은 팝업으로 알리고, 서버 변경 이력을 표시합니다. (최대 3개)
+<br />팝업은 15초 동안 표시되며 클릭 시 바로 꺼집니다.
+
 ![](https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/preview_sc.png)
 
 Toolbar 의 Tampermonkey 아이콘 - Twitch-Server-Info - Change Notification Setting 을 클릭하여 서버 변경 시 팝업 알림 여부를 켜고 끌 수 있습니다.
