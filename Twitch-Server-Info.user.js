@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.4
+// @version     0.0.5
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -10,7 +10,6 @@
 // @downloadURL https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/Twitch-Server-Info.user.js
 // @updateURL   https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/Twitch-Server-Info.user.js
 // @include     *://*.twitch.tv/*
-// @match       about:blank
 // @require     http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js
 // @run-at      document-start
 // @grant       GM_addStyle
@@ -18,6 +17,7 @@
 // @grant       GM_getValue
 // @grant       GM_setClipboard
 // @grant       unsafeWindow
+// @grant       GM_registerMenuCommand
 // ==/UserScript==
 /*jshint multistr: true */
 if (window.TWITCH_SERVER_INFO === undefined) {
@@ -94,6 +94,25 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             console.log.apply(console, args);
         }
     };
+
+    // 메시지 팝업
+    var simple_message = function(msg, $elem){
+        if($elem === undefined){
+            $elem = $("body");
+        }
+        var prefix = "GM_setting_autosaved";
+        var positiontext = "left";
+
+        $elem.find("."+prefix).animate({bottom:"+=40px"}, {duration:300, queue: false}); // cleqrQueue().dequeue().finish().stop("true","true")
+        // @keyframes glow {to {text-shadow: 0 0 10px white;box-shadow: 0 0 10px #5cb85c;}}
+        $("<div style='animation: glow .5s 10 alternate; position:fixed; "+positiontext+":10px; bottom:20px; z-index:10000000;' class='"+prefix+" btn btn-success'>"+msg+"</div>")
+            .appendTo($elem)
+            .fadeIn("fast")
+            .animate({opacity:1}, 10000, function(){
+                $(this).fadeOut("fast").delay(600).remove();
+            })
+            .animate({left:"+=30px"}, {duration:300, queue: false});
+    };
     ////////////////////////////////////////////////////////////////////////////////////
     // Initialize
     ////////////////////////////////////////////////////////////////////////////////////
@@ -105,10 +124,10 @@ if (window.TWITCH_SERVER_INFO === undefined) {
 
     var NOMO_getValue = function (name, val) {
         return (typeof GM_getValue === "function" ? GM_getValue(name, val) : val);
-    }
+    };
     var NOMO_setValue = function (name, val) {
         return (typeof GM_setValue === "function" ? GM_setValue(name, val) : val);
-    }
+    };
 
     // 글로벌 변수 선언
     var nomo_global = {
@@ -119,16 +138,17 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         "FIXER_SERVER": NOMO_getValue("FIXER_SERVER", ["sel"]),
         "FIXER_ATTEMPT_MAX": NOMO_getValue("FIXER_ATTEMPT_MAX", 15),
         "FIXER_DELAY": NOMO_getValue("FIXER_DELAY", 500),
+        "SERVER_CHANGE_SHOW": NOMO_getValue("SERVER_CHANGE_SHOW", true),
         "prev_server": ""
     };
 
     // FIXER_SERVER 검증
-    if(typeof FIXER_SERVER === "string"){
-        if(FIXER_SERVER.indexOf(",") !== -1){
-            FIXER_SERVER = FIXER_SERVER.split(",");
+    if(typeof nomo_global.FIXER_SERVER === "string"){
+        if(nomo_global.FIXER_SERVER.indexOf(",") !== -1){
+            nomo_global.FIXER_SERVER = nomo_global.FIXER_SERVER.split(",");
         }
         else{
-            FIXER_SERVER = [FIXER_SERVER];
+            nomo_global.FIXER_SERVER = [nomo_global.FIXER_SERVER];
         }
     }
     for (var i = 0; i < nomo_global.FIXER_SERVER.length; i++) {
@@ -154,13 +174,13 @@ if (window.TWITCH_SERVER_INFO === undefined) {
 
     // LOG를 클리어 하려면 console 창에 TWITCH_SERVER_INFO_CLEARLOG() 을 붙여넣기 하세요.
     unsafeWindow.TWITCH_SERVER_INFO_CLEARLOG = function () {
-        NOMO_setValue("LOG_DATA", []);
+        NOMO_setValue("LOG", []);
         return "CLEAR LOG";
     };
 
     // LOG를 콘솔창에 찍으려면 console 창에 TWITCH_SERVER_INFO_SHOWLOG() 을 붙여넣기 하세요.
     unsafeWindow.TWITCH_SERVER_INFO_SHOWLOG = function () {
-        var log_data = NOMO_getValue("LOG_DATA", []);
+        var log_data = NOMO_getValue("LOG", []);
         for (var key in log_data) {
             log_data[key][0] = new Date(log_data[key][0] * 1000).format("yyyy-MM-dd amp hh:mm:ss");
         }
@@ -178,6 +198,39 @@ if (window.TWITCH_SERVER_INFO === undefined) {
     unsafeWindow.TWITCH_SERVER_INFO_FIXER = function () {
         return TWITCH_SERVER_INFO_SET_VAL("FIXER", !nomo_global.FIXER);
     };
+
+    var set_log = function(log){
+        if (!nomo_global.LOGGING){
+            return;
+        }
+        // unix time 시간을 ms 버리고 s 단위로 저장한다.
+        var date_n = Number(new Date());
+        var date_s = String(date_n).substr(0, String(date_n).length - 3);
+
+        // 기존 데이터 불러옴
+        var log_data = NOMO_getValue("LOG", []);
+        var new_log_data = [date_s].concat(log);
+        log_data.unshift(new_log_data);
+        if (log_data.length > LOGGING_MAX) {
+            log_data = log_data.slice(0, LOGGING_MAX);
+        }
+        NOMO_setValue("LOG", log_data);
+        NOMO_DEBUG("로깅 완료", new_log_data);
+    };
+
+    // 설정 메뉴 추가 및 관리
+    var GM_Setting_Bootstrap = 'GM_Setting_Bootstrap';
+    if (typeof GM_registerMenuCommand === "function") {
+        GM_registerMenuCommand("Change Notification Setting", function () {
+            TWITCH_SERVER_INFO_SET_VAL("SERVER_CHANGE_SHOW", !nomo_global.SERVER_CHANGE_SHOW);
+            if(nomo_global.SERVER_CHANGE_SHOW){
+                simple_message("Server Change Notification : ON");
+            }
+            else {
+                simple_message("Server Change Notification : OFF");
+            }
+        });
+    }
 
     // 서버 리스트 1 - 현재 사용 안 함
     // var server_list = [
@@ -329,6 +382,22 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             -webkit-animation: load8 0.5s infinite linear;
             animation: load8 0.5s infinite linear;
             }
+
+            @keyframes glow_twitch {to {text-shadow: 0 0 15px white;box-shadow: 0 0 15px #7d5bbe;}}
+            .tsi_sc {
+                user-select:none;
+                cursor:pointer;
+                padding:5px 10px !important;
+                background:rgba(0,0,0,0.7);
+                color:#fff;
+                border-radius:5px;
+                animation:glow_twitch .5s 20 alternate;
+                font-size:13px;z-index:10;position:absolute;
+                position:absolute;left:50%;
+                bottom:20px;
+                transform:translateX(-50%);
+            }
+
             @-webkit-keyframes load8 {
             0% {
                 -webkit-transform: rotate(0deg);
@@ -356,6 +425,21 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             .pl-menu, .pl-menu *{
                 z-index:70 !important;
             }
+
+            .GM_setting_autosaved.btn{
+                max-width:100%;
+                font-size:12px;
+                white-space:pre-wrap;
+                user-select:text;
+             }
+             @keyframes glow {to {text-shadow: 0 0 10px white;box-shadow: 0 0 10px #5cb85c;}}
+             .GM_setting_autosaved.btn{display:inline-block;margin-bottom:0;font-weight:normal;text-align:center;vertical-align:middle;cursor:pointer;background-image:none;border:1px solid transparent;padding:6px 12px;line-height:1.42857143;border-radius:4px;}
+             .GM_setting_autosaved.btn:focus,.GM_setting_autosaved.btn:active:focus,.GM_setting_autosaved.btn.active:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}
+             .GM_setting_autosaved.btn:hover,
+             .GM_setting_autosaved.btn:focus{color:#fff;text-decoration:none}
+             .GM_setting_autosaved.btn:active,
+             .GM_setting_autosaved.btn.active{outline:0;background-image:none;-webkit-box-shadow:inset 0 3px 5px rgba(0,0,0,0.125);box-shadow:inset 0 3px 5px rgba(0,0,0,0.125)}
+             .GM_setting_autosaved.btn-success{color:#fff;background-color:#5cb85c;border-color:#4cae4c}
         `);
     }
 
@@ -453,17 +537,17 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             }
 
                             // 클러스터 문구 존재하는지 확인
-                            var text_split;
+                            var cluster_str;
                             // 클러스터 문구 존재하면 추출
                             if((/CLUSTER=/).test(m3u8_text)){
-                                text_split = m3u8_text.split("CLUSTER=")[1].split(",")[0].replace(/"/g,'');
-                                NOMO_DEBUG("클러스터 문구 존재", text_split);
+                                cluster_str = m3u8_text.split("CLUSTER=")[1].split(",")[0].replace(/"/g,'');
+                                NOMO_DEBUG("클러스터 문구 존재", cluster_str);
 
                                 for(var SN of FIXER_SERVER){
                                     // 원하는 서버를 찾은 경우
-                                    if(text_split.indexOf(SN) !== -1){
+                                    if(cluster_str.indexOf(SN) !== -1){
                                         FIXED = true;
-                                        NOMO_DEBUG("원하는 서버를 찾았다", SN, text_split);
+                                        NOMO_DEBUG("원하는 서버를 찾았다", SN, cluster_str);
                                         break;
                                     }
                                 }
@@ -471,11 +555,11 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             // 클러스터 문구 존재하지 않음
                             else{
                                 NOMO_DEBUG("CLUSTER 문구가 존재하지 않음, 재시도");
-                                text_split = "Server name not found.";
+                                cluster_str = "Server name not found.";
                             }
 
                             // Loader 표시를 위해 postMessage 보내기
-                            postMessage({"id":0,"type":"tsi_fixer","arg":"","fixed":{"FIXED":FIXED,"CURRENT_SERVER":text_split,"FIXER_count":FIXER_count}});
+                            postMessage({"id":0,"type":"tsi_fixer","arg":"","fixed":{"FIXED":FIXED,"CURRENT_SERVER":cluster_str,"FIXER_count":FIXER_count}});
                             
                             // 원하는 서버를 찾은 경우 or 최대 카운트에 도달한 경우
                             if(FIXED || FIXER_count === FIXER_ATTEMPT_MAX){
@@ -493,7 +577,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             }
                             else{
                                 // 원하는 서버를 찾지 못한 경우
-                                NOMO_DEBUG("원하는 서버를 찾지 못했다", FIXER_SERVER, text_split);
+                                NOMO_DEBUG("원하는 서버를 찾지 못했다", FIXER_SERVER, cluster_str);
                                 FIXER_count = FIXER_count + 1;
                             }
 
@@ -520,43 +604,54 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         // Worker 밖에서 postMessage 수신 및 DOM 생성
         ////////////////////////////////////////////////////////////////////////////////////
         my_worker.onmessage = function (e) {
-            // 타입 확인
+            // 로깅을 위한 기본 정보 확인
+            // 주소로부터 스트리머 id 가져오기
+            var streamer_id = String(document.location.href).match(/twitch\.tv\/(?:.+channel=)?([a-zA-Z0-9-_]+)\/?/); // /twitch\.tv\/(([a-zA-Z0-9-_]+)|.+channel=([a-zA-Z0-9-_]+))\/?/
+            streamer_id = (streamer_id !== null ? streamer_id.pop() : "");
+
+            // 타입 확인: tsi (기본)
             if (e.data.type === "tsi") {
+                var msg_arg = e.data.arg;
+                
                 if (nomo_global.DEBUG_FETCH) {
                     NOMO_DEBUG('Message received from worker', e.data);
                 }
 
-                var msg_arg = e.data.arg;
+                // master playlist or vod 여부 확인
+                var is_master_playlist = msg_arg.indexOf('usher.ttvnw.net/api/channel/hls') !== -1;
+                var is_vod = msg_arg.indexOf('usher.ttvnw.net/vod/') !== -1;
+                if (is_master_playlist){
+                    set_log(["mp", streamer_id]);
+                }
+
                 // 채널 첫 접속 시 .m3u8 파일 or vod 재생 시 서버 표시 DOM 을 지운다
-                if (msg_arg.indexOf('usher.ttvnw.net/api/channel/hls') !== -1 || msg_arg.indexOf('usher.ttvnw.net/vod/') !== -1) {
+                if (is_master_playlist || is_vod) {
                     // 기존 DOM을 지운다.
                     $("#current_server").remove();
                     nomo_global.prev_server = "";
                     nomo_global.prev_server_list = [];
                 }
-                // 아래처럼 확인하면 segment 를 받아오기 위한 .m3u8 파일과 .ts 파일이 걸러진다.
-                // if (msg_arg.indexOf('.hls.ttvnw.net') !== -1) {
-                // 현재는 주소에 /v1/segment/ 이 포함된 .ts 파일만 확인한다.
+                // 주소에 /v1/segment/ 이 포함되었는지 1차적으로 거른다.
                 else if (msg_arg.indexOf("/v1/segment/")) {
                     // sample 1: https://video-edge-7e9b9c.sea01.abs.hls.ttvnw.net/v1/segment/CrkETpsPvu8J-JU7Uw41bTmckS0cEofD3pr3EKsfyLpEMWZgb5zeNdYkjkVo5KBYM95UtJvXIJsRRMKazzgDmtksZTSZU-f_EkxSuZrsRdGoaCeHqzbT4l-8mb0OOh9FohqMuzmla4eSVEagbddvmI-_vm3fXDRUehf2BtfhApNVXkcsCVhmrgUKXDuP8YWfdTwmQalG1YnIFtbRg3xw9CVKqajbU4FLcgI0sLHpS-bb3OquKpucwfo8paJyXh7XWCsRF_yLIcbv6iSS7i83uVTTHx54NX8V0K5CntIfVWAfYG-xaypl6qKAKKIRbNa-hsRSQ62Kvqltb_mu6LhStkK1F3qmln_e1hCc7ytx7TVAJmK-GeeplfvCGIxI4qnhl3dSTV0RushnljKYgiA3kt_yC-KbqPPMjTcRgyitGwjyxpHweeQJfJqFGJizcpaFMzmdI5gW_CbdXhX4FWq6TCaRjSCgwx_ewXC5Ct6W7QnWaep35BhxdhX1i0-hh7YflMDFKAykfB07m48DWINT_Fn1K98J0tLKL7yaNJedzM2PhF9AeARA5_fSTzBkA_duOY9fmpOpRFN1VpfmHID3tYDY1F_XZJJmiG6rd_UynJfji8ikbhwkgVc0_QWtOerN10ysY3IvUjlIJn0RwFScCNqdUoMKMKPMsOMfaS1oc1vq8YBPCagEgLnBk6A0d6A61x3brmAU2RaiOCEMChn-n80GyEH3AoIoDOW3fj6lOg1M2uKlMb8vPBYpYp8SEPpaz83YuxcS4pbU4mznHkMaDAsKJElIKxXWiGX3zw.ts
                     // sample 2: https://live003-ttvnw.akamaized.net/v1/segment/CsoBN06NSMlknciQP8zdCmSmxw4Zz7GxFwO-SNrfef7l7Z7x-pDKXl6F0jeUDQSkwEXm61AgNcRXavIb-g9kT8U4XkZaOBhtJa0DxO10EkIFpePqwhq7Vmazjn1E0cZ1vzp_dQmnBirLIYTUssV3NmwNAjA5-pIMqrj4ibG4h8r3xr2lRz-yAyzatBu0d9HgvGWYRvSWVm1I6bZ8ii_sNV1squ9LlvIEJ0uQ1bCvVnP7sMmurlnKvTx-VDwQ8veMH5G1FQbwm9ta8RmpLBIQHt-eAsho321hz6pZk697kBoMVpjw0pSuRgcYKTDb.ts
                     var current_server = msg_arg.match(/\/\/(?:vid[a-zA-Z0-9-_]+\.)?([a-zA-Z0-9-_.]+)\/v1\/segment\/.+\.ts/);
 
-                    // 제대로 찾은 경우
+                    // 서버 명을 제대로 찾은 경우
                     if (current_server !== null) {
                         // 서버 주소 가져오기
                         current_server = current_server.pop();
 
                         // 기존에 가져온 이름과 동일한지 확인하여 다를 경우에만 DOM 재생성
                         if (nomo_global.prev_server !== current_server) {
-                            nomo_global.prev_server = current_server;
                             NOMO_DEBUG("현재 서버:", current_server);
 
                             // 서버 이름 - 지역 매칭하기
                             var server_str = current_server.split(".")[0];
                             var server_name = "";
                             if (current_server.indexOf("akamai") !== -1) {
-                                server_name = "<br />(Akamai)";
+                                server_str = "AKAMAI";
+                                server_name = "<br />(AKAMAI)";
                             } else {
                                 for (var i = 0; i < server_list_2.length; i++) {
                                     if (server_str.indexOf(server_list_2[i][0]) !== -1) {
@@ -566,17 +661,54 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                 }
                             }
 
-                            // 서버 바뀐 경우, 이력 표시 (현재 디버그 중)
+
+                            // 현재 서버를 server_list array 에 push
+                            nomo_global.prev_server_list.push(server_str);
+                            const MAX_SERVER_LIST_LENGTH = 3;
+                            if (nomo_global.prev_server_list.length > MAX_SERVER_LIST_LENGTH) {
+                                nomo_global.prev_server_list = nomo_global.prev_server_list.slice(nomo_global.prev_server_list.length - MAX_SERVER_LIST_LENGTH);
+                            }
+
+                            // 초기 접속 시
+                            if(nomo_global.prev_server === ""){
+                                // 로깅 하기
+                                set_log(["s1", streamer_id, current_server]);
+                            }
+                            
                             var server_change_history = "";
-                            if(nomo_global.DEBUG){
-                                nomo_global.prev_server_list.push(server_str);
-                                if (nomo_global.prev_server_list.length > 5) {
-                                    nomo_global.prev_server_list = nomo_global.prev_server_list.slice(nomo_global.prev_server_list.length - 5);
+                            // 초기 접속이 아니고 서버가 변경된 경우
+                            if(nomo_global.SERVER_CHANGE_SHOW && nomo_global.prev_server !== ""){
+                                server_change_history = "<br />" + nomo_global.prev_server_list.join(" → ").toUpperCase();
+                                var prev_svr_str = nomo_global.prev_server_list[nomo_global.prev_server_list.length - 2].toUpperCase();
+                                var curr_svr_str = server_str.toUpperCase();
+                                
+                                // server change text 표시 위한 container 확인
+                                var $player_root_sc = $(".player-root");    // for embeded player, old twitch player
+                                if($player_root_sc.length === 0){
+                                    $player_root_sc = $(".highwind-video-player__container");   // for new twitch player
                                 }
-                                if(nomo_global.prev_server !== "" && nomo_global.prev_server !== current_server){
-                                    server_change_history = "<br />" + server_change_history.join(" → ");
+                                // container 존재 시 메시지 출력
+                                if($player_root_sc.length !== 0){
+                                    $(".tsi_sc").remove();
+                                    var $sc_text = $(`<div class="tsi_sc" style="display:none;">Server Changed: ${prev_svr_str} → ${curr_svr_str}</div>`);
+                                    $sc_text.prependTo($player_root_sc).fadeIn(500, function(){
+                                        $(this).delay(15000).fadeOut(500, function(){
+                                            $(this).delay(1000).remove();
+                                        });
+                                    })
+                                    .on("click", function(){
+                                        $(this).stop(false, false).fadeOut(500, function(){
+                                            $(this).delay(1000).remove();
+                                        });
+                                    });
                                 }
+                                else{
+                                    simple_message(`[TSI] Server Changed : ${prev_svr_str} → ${curr_svr_str}`, $("body"));
+                                }
+                                
+                                // 로깅
                                 NOMO_DEBUG("서버 리스트 갱신", nomo_global.prev_server_list);
+                                set_log(["sc", streamer_id, current_server]);
                             }
 
                             // FIXER 에서 연결 시도 횟수 표시
@@ -590,40 +722,10 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             }
                             var dom_string = fixed_string + current_server + server_name + server_change_history;
 
-                            // 로깅 하기
-                            try {
-                                if (nomo_global.LOGGING) {
-                                    // 기존 데이터 불러옴
-                                    var log_data = NOMO_getValue("LOG_DATA", []);
-
-                                    // unix time 시간을 ms 버리고 s 단위로 저장한다.
-                                    var date_n = Number(new Date());
-                                    var date_s = String(date_n).substr(0, String(date_n).length - 3);
-
-                                    // 주소로부터 스트리머 id 가져오기
-                                    var streamer_id = String(document.location.href).match(/twitch\.tv\/(?:.+channel=)?([a-zA-Z0-9-_]+)\/?/); // /twitch\.tv\/(([a-zA-Z0-9-_]+)|.+channel=([a-zA-Z0-9-_]+))\/?/
-                                    if (streamer_id !== null) {
-                                        streamer_id = streamer_id.pop();
-                                    } else {
-                                        streamer_id = "";
-                                    }
-
-                                    var new_log_data = [date_s, streamer_id, current_server];
-                                    log_data.unshift(new_log_data);
-                                    if (log_data.length > LOGGING_MAX) {
-                                        log_data = log_data.slice(0, LOGGING_MAX);
-                                    }
-                                    NOMO_setValue("LOG_DATA", log_data);
-                                    NOMO_DEBUG("로깅 완료", new_log_data);
-                                }
-                            } catch (e) {
-                                NOMO_DEBUG("LOGGING 중 에러", e);
-                            }
-
                             // DOM 생성
-                            var $player_menu = $(document).find(".player-buttons-right");    // for embeded player, old twitch player
+                            var $player_menu = $(".player-buttons-right");    // for embeded player, old twitch player
                             if($player_menu.length === 0){
-                                $player_menu = $(document).find(".player-controls__right-control-group");   // for new twitch player
+                                $player_menu = $(".player-controls__right-control-group");   // for new twitch player
                             }
                             if ($player_menu.length !== 0) {
                                 $(".player-buttons-right").find(".player-tip").css("z-index", 60);
@@ -669,6 +771,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                                     TWITCH_SERVER_INFO_SET_VAL("FIXER_SERVER", []);
                                                 }
                                                 else{
+                                                    // eslint-disable-next-line no-useless-escape
                                                     FIXER_SERVER_PROMPT = FIXER_SERVER_PROMPT.toLowerCase().replace(/[\{\}\[\]\/?.;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"\s]/gi, "").split(",");
                                                     TWITCH_SERVER_INFO_SET_VAL("FIXER_SERVER", FIXER_SERVER_PROMPT);
                                                     NOMO_DEBUG("FIXER_SERVER_PROMPT", FIXER_SERVER_PROMPT);
@@ -678,6 +781,11 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                         },1000);
                                     });
                             } // DOM 생성 끝
+                            else{
+                                simple_message(current_server + server_name);
+                            }
+
+                            nomo_global.prev_server = current_server;
                         } // 기존에 가져온 서버 이름과 동일한지 체크 끝
                     } // 정규표현식으로 .ts 파일 체크 끝
                 } // indexOf('.hls.ttvnw.net') 체크 끝
@@ -691,9 +799,9 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                 }
 
                 // LOADER DOM 생성
-                var $player_root = $(document).find(".player-root");    // for embeded player, old twitch player
+                var $player_root = $(".player-root");    // for embeded player, old twitch player
                 if($player_root.length === 0){
-                    $player_root = $(document).find(".highwind-video-player__container");   // for new twitch player
+                    $player_root = $(".highwind-video-player__container");   // for new twitch player
                 }
                 if ($player_root.length !== 0) {
                     $("#fixer_loader").remove();
@@ -704,8 +812,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             <div class="loader_text">
                                 Target Server : ${nomo_global.FIXER_SERVER.join(', ')}<br />
                                 Connected Server : ${e.data.fixed.CURRENT_SERVER}<br />
-                                connection attempts: <span${FIXED_FAILED ? ' style="color:red;"' : ''}>${e.data.fixed.FIXER_count}</span> / ${nomo_global.FIXER_ATTEMPT_MAX}
-                                ${FIXED_FAILED ? "<br /><span style='color:red;'>SERVER FIX FAILED</span>" : ''}
+                                connection attempts: <span${FIXED_FAILED ? ' style="color:red !important;"' : ''}>${e.data.fixed.FIXER_count}</span> / ${nomo_global.FIXER_ATTEMPT_MAX}
+                                ${FIXED_FAILED ? "<br /><span style='color:red !important;'>SERVER FIX FAILED</span>" : ''}
                             </div>
                             <div class="loader_contents">Loading...</div>
                         </div>`)

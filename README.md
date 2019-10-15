@@ -7,6 +7,12 @@
 
 ![](https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/preview.png)
 
+Live 시청 중 서버가 변경되는 경우 작은 팝업으로 알리고, 서버 변경 이력을 표시합니다. (MAX 3개)
+<br />팝업은 15초동안 표시되며 클릭 시 바로 꺼집니다.
+![](https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/preview_sc.png)
+
+Toolbar 의 Tampermonkey 아이콘 - Twitch-Server-Info - Change Notification Setting 을 클릭하여 서버 변경 시 팝업 알림 여부를 켜고 끌 수 있습니다.
+
 ## Install
 #### STEP 1. ScriptManager
 자신의 브라우저에 맞는 유저스크립트 관리 확장기능 설치
@@ -27,8 +33,11 @@
 버그 많음 버그리포트 바랍니다 (__) nomotg@gmail.com
 
 ## Change log
+### 0.0.5 (2019-10-15)
+- Live 시청 중 서버가 자동으로 변경되는 경우 알리고, 변경 이력을 표시
+- 서버 표시 위치를 찾을 수 없는 경우 팝업 메시지를 통해 알리도록 하여 아예 동작하지 않는 것을 방지
 ### 0.0.4 (2019-10-09)
-- Twitch layout 개편 후 제대로 표시되지 않는 문제 수정
+- Twitch 디자인 개편 후 제대로 표시되지 않는 문제 수정
 ### 0.0.3 (2019-09-21)
 - 디버그 및 테스트 용 기능 추가
 ### 0.0.2 (2019-09-20)
