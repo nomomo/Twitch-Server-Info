@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.5
+// @version     0.0.6
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -317,12 +317,16 @@ if (window.TWITCH_SERVER_INFO === undefined) {
     // 스타일 추가
     if (typeof GM_addStyle === "function") {
         GM_addStyle( /*css*/ `
+            div.player-buttons-right #current_server{
+                bottom:42px;
+                right:18px;
+            }
             #current_server{
                 color:#fff;
                 z-index:10;
                 position:absolute;
-                bottom:42px;
-                right:18px;
+                bottom:34px;
+                right:6px;
                 text-align:right;
                 font-size:11px;
                 ${typeof GM_setClipboard === "function" ?
@@ -331,9 +335,9 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             }
 
             #copied{
-                background-color:#575260;
-                border-radius:2px;
-                padding:1px 4px;
+                background-color:#686878;
+                border-radius:10px;
+                padding:1px 7px;
                 margin-right:7px;
                 user-select: none;
             }
@@ -728,6 +732,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                 $player_menu = $(".player-controls__right-control-group");   // for new twitch player
                             }
                             if ($player_menu.length !== 0) {
+                                $player_menu.css("position","relative");
                                 $(".player-buttons-right").find(".player-tip").css("z-index", 60);
                                 $("#current_server").remove();
                                 $(`<span id="current_server" style="display:none;">${dom_string}</span>`)
