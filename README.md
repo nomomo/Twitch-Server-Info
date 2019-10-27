@@ -22,7 +22,8 @@ Toolbar 의 Tampermonkey 아이콘 - Twitch-Server-Info - Change Notification Se
 - Firefox - [Tampermonkey](https://addons.mozilla.org/ko/firefox/addon/tampermonkey/)
 - Chrome - [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=ko)
 - Opera - [Tampermonkey](https://addons.opera.com/extensions/details/tampermonkey-beta/)
-- Safari - [Tampermonkey](https://safari.tampermonkey.net/tampermonkey.safariextz)
+- Safari 12+ | MacOS 10.14.4+ - [Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id1482490089)
+- Safari 6-12 - [Tampermonkey](https://safari.tampermonkey.net/tampermonkey.safariextz)
 - Edge - [Tampermonkey](https://www.microsoft.com/store/p/tampermonkey/9nblggh5162s)
   
 #### STEP 2. UserScript
@@ -31,10 +32,16 @@ Toolbar 의 Tampermonkey 아이콘 - Twitch-Server-Info - Change Notification Se
 > ##### 주의: 본 스크립트를 설치 및 사용하며 브라우저 과부하로 인한 응답 없음/뻗음 등 으로 인한 데이터 손실 등 문제 발생 시 개발자는 책임지지 않음(보고된 문제는 없음)
 > ##### Twitch 접속에 문제가 생기거나 동영상 재생이 안 되는 문제 등이 발생하는 경우, Tampermonkey 의 관리 메뉴에서 이 스크립트를 끄거나 삭제해주세요.
 
+## Q&A
+- Q: Akamai 는 뭔가요? 지역이 어딘가요?<br />A: Akamai 는 Twitch 가 이용하는 CDN 서비스입니다. 특정 지역의 이용자가 많아지면 해당 지역의 초과된 트래픽 처리를 위해 CDN 을 이용하는 것으로 추정됩니다. 주말 저녁과 같은 피크시간을 제외하고 Akamai 의 연결 속도는 대체로 양호한 편입니다. 대한민국 지역에서 접속 시 연결되는 서버의 상세 이름은 Akamai_korea 이며, 한국 지역을 담당하는 서버로 추정됩니다. 대한민국 외 지역에서 접속 시 연결되는 Akamai 서버가 달라지는지 확인되지 않아 편의상 Akamai 로만 표기하고 있습니다.
+- Q: 스쿼드 스트리밍을 지원하나요?<br />A: 현재 지원하지 않습니다. 꼭 필요한 경우 멀티트위치를 사용해주세요.
+
 ## Bug report
 버그 많음 버그리포트 바랍니다 (__) nomotg@gmail.com
 
 ## Change log
+### 0.0.7 (2019-10-27)
+- 스쿼드 스트리밍 시 작동하지 않도록 변경
 ### 0.0.6 (2019-10-17)
 - 설정 버튼 클릭 후 서버 표시 위치가 변경되는 문제 수정 (Twitch 개편 이후 스타일이 수시로 바뀌고 있어서 대응 중)
 ### 0.0.5 (2019-10-15)
