@@ -141,7 +141,6 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             "FIXER_ATTEMPT_MAX": NOMO_getValue("FIXER_ATTEMPT_MAX", 15),
             "FIXER_DELAY": NOMO_getValue("FIXER_DELAY", 500),
             "SERVER_CHANGE_SHOW": NOMO_getValue("SERVER_CHANGE_SHOW", true),
-            "FixServer_STATUS": NOMO_getValue("FixServer_STATUS", false),
             "prev_server": "",
             "is_squad": false
         };
@@ -492,7 +491,6 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     const FIXER_DELAY = ${FIXER_DELAY_MIN  >= nomo_global.FIXER_DELAY ? nomo_global.FIXER_DELAY : FIXER_DELAY_MIN};
                     const DEBUG_WORKER = ${nomo_global.DEBUG};
                     const DEBUG_M3U8 = ${nomo_global.DEBUG_M3U8};
-                    const FixServer_STATUS = ${nomo_global.FixServer_STATUS};
                     var FIXER_count = 1;
                     var FIXED = false;
                     var FIXED_SERVER = undefined;
@@ -531,7 +529,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             NOMO_DEBUG("첫 채널 접속 시 URL 감지됨", input);
                             
                             // ServerFix = true일 때 반복 시작
-                            if(FixServer_STATUS == true){
+                            if(Fixer == true){
                                 while(!FIXED && FIXER_count <= FIXER_ATTEMPT_MAX){
                                     NOMO_DEBUG("서버 자동 잡기 시도 중...");
                                     NOMO_DEBUG("현재 시도 수", (FIXER_count) + " / " + FIXER_ATTEMPT_MAX);
