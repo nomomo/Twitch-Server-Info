@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.6
+// @version     0.0.7
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
