@@ -494,9 +494,6 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     var FIXER_count = 1;
                     var FIXED = false;
                     var FIXED_SERVER = undefined;
-                    function sleep(ms) {
-                        return new Promise(resolve => setTimeout(resolve, ms));
-                    }
 
                     // WORKER 내 디버깅용 함수
                     var NOMO_DEBUG = function ( /**/ ) {
@@ -512,6 +509,28 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             console.log.apply(console, args);
                         }
                     };
+
+                    // global 변수 확인
+                    NOMO_DEBUG({"FIXER":FIXER, "FIXER_SERVER":FIXER_SERVER, "FIXER_ATTEMPT_MAX":FIXER_ATTEMPT_MAX, "FIXER_DELAY":FIXER_DELAY, "DEBUG_WORKER":DEBUG_WORKER, "DEBUG_M3U8":DEBUG_M3U8});
+                    
+                    // 오류 방지를 위해 명시적으로 타입을 재확인
+                    if(typeof FIXER !== "boolean" || typeof FIXER_SERVER !== "object"){
+                        FIXER = false;
+                        NOMO_DEBUG("typeof FIXER is not boolean", FIXER, FIXER_SERVER);
+                    }
+                    if(typeof DEBUG_WORKER !== "boolean"){
+                        DEBUG_WORKER = false;
+                        NOMO_DEBUG("typeof DEBUG_WORKER is not boolean", DEBUG_WORKER);
+                    }
+                    if(typeof DEBUG_M3U8 !== "boolean"){
+                        DEBUG_M3U8 = false;
+                        NOMO_DEBUG("typeof DEBUG_M3U8 is not boolean", DEBUG_M3U8);
+                    }
+
+                    // sleep 함수
+                    function sleep(ms) {
+                        return new Promise(resolve => setTimeout(resolve, ms));
+                    }
 
                     // Worker 내부의 fetch 함수 탈취 & 덮어쓰기
                     const originalFetch = self.fetch;
