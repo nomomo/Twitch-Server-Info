@@ -139,6 +139,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
         "FIXER_ATTEMPT_MAX": NOMO_getValue("FIXER_ATTEMPT_MAX", 15),
         "FIXER_DELAY": NOMO_getValue("FIXER_DELAY", 500),
         "SERVER_CHANGE_SHOW": NOMO_getValue("SERVER_CHANGE_SHOW", true),
+        "FixServer_STATUS": NOMO_getValue("FixServer_STATUS", true),
         "prev_server": ""
     };
 
@@ -488,6 +489,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                 const FIXER_ATTEMPT_MAX = ${nomo_global.FIXER_ATTEMPT_MAX};
                 const FIXER_DELAY = ${FIXER_DELAY_MIN  >= nomo_global.FIXER_DELAY ? nomo_global.FIXER_DELAY : FIXER_DELAY_MIN};
                 const DEBUG_WORKER = ${nomo_global.DEBUG};
+                const FixServer_STATUS = ${nomo_global.FixServer_STATUS};
                 var FIXER_count = 1;
                 var FIXED = false;
                 var FIXED_SERVER = undefined;
@@ -525,69 +527,71 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                         FIXER_count = 1;
                         NOMO_DEBUG("첫 채널 접속 시 URL 감지됨", input);
                         
-                        // 반복 시작
-                        while(!FIXED && FIXER_count <= FIXER_ATTEMPT_MAX){
-                            NOMO_DEBUG("서버 자동 잡기 시도 중...");
-                            NOMO_DEBUG("현재 시도 수", (FIXER_count) + " / " + FIXER_ATTEMPT_MAX);
+                        // ServerFix = true일 때 반복 시작
+                        if(FixServer_STATUS == true){
+                            while(!FIXED && FIXER_count <= FIXER_ATTEMPT_MAX){
+                                NOMO_DEBUG("서버 자동 잡기 시도 중...");
+                                NOMO_DEBUG("현재 시도 수", (FIXER_count) + " / " + FIXER_ATTEMPT_MAX);
 
-                            var m3u8_fetch = await originalFetch.apply(this, arguments);
-                            var m3u8_text = await m3u8_fetch.text();
-                            // NOMO_DEBUG("m3u8_text", m3u8_text);
+                                var m3u8_fetch = await originalFetch.apply(this, arguments);
+                                var m3u8_text = await m3u8_fetch.text();
+                                // NOMO_DEBUG("m3u8_text", m3u8_text);
 
-                            // error 발생하는지 확인
-                            if(m3u8_text.indexOf("error_code") !== -1 || m3u8_text.indexOf("Can not fi") !== -1){
-                                NOMO_DEBUG("에러 발생, 중지", {m3u8_text});
-                                break;
-                            }
+                                // error 발생하는지 확인
+                                if(m3u8_text.indexOf("error_code") !== -1 || m3u8_text.indexOf("Can not fi") !== -1){
+                                    NOMO_DEBUG("에러 발생, 중지", {m3u8_text});
+                                    break;
+                                }
 
-                            // 클러스터 문구 존재하는지 확인
-                            var cluster_str;
-                            // 클러스터 문구 존재하면 추출
-                            if((/CLUSTER=/).test(m3u8_text)){
-                                cluster_str = m3u8_text.split("CLUSTER=")[1].split(",")[0].replace(/"/g,'');
-                                NOMO_DEBUG("클러스터 문구 존재", cluster_str);
+                                // 클러스터 문구 존재하는지 확인
+                                var cluster_str;
+                                // 클러스터 문구 존재하면 추출
+                                if((/CLUSTER=/).test(m3u8_text)){
+                                    cluster_str = m3u8_text.split("CLUSTER=")[1].split(",")[0].replace(/"/g,'');
+                                    NOMO_DEBUG("클러스터 문구 존재", cluster_str);
 
-                                for(var SN of FIXER_SERVER){
-                                    // 원하는 서버를 찾은 경우
-                                    if(cluster_str.indexOf(SN) !== -1){
-                                        FIXED = true;
-                                        NOMO_DEBUG("원하는 서버를 찾았다", SN, cluster_str);
-                                        break;
+                                    for(var SN of FIXER_SERVER){
+                                        // 원하는 서버를 찾은 경우
+                                        if(cluster_str.indexOf(SN) !== -1){
+                                            FIXED = true;
+                                            NOMO_DEBUG("원하는 서버를 찾았다", SN, cluster_str);
+                                            break;
+                                        }
                                     }
                                 }
-                            }
-                            // 클러스터 문구 존재하지 않음
-                            else{
-                                NOMO_DEBUG("CLUSTER 문구가 존재하지 않음, 재시도");
-                                cluster_str = "Server name not found.";
-                            }
+                                // 클러스터 문구 존재하지 않음
+                                else{
+                                    NOMO_DEBUG("CLUSTER 문구가 존재하지 않음, 재시도");
+                                    cluster_str = "Server name not found.";
+                                }
 
-                            // Loader 표시를 위해 postMessage 보내기
-                            postMessage({"id":0,"type":"tsi_fixer","arg":"","fixed":{"FIXED":FIXED,"CURRENT_SERVER":cluster_str,"FIXER_count":FIXER_count}});
-                            
-                            // 원하는 서버를 찾은 경우 or 최대 카운트에 도달한 경우
-                            if(FIXED || FIXER_count === FIXER_ATTEMPT_MAX){
-                                // blob 로 만들어서 리턴한다.
-                                var m3u8_blob = new Blob([m3u8_text], {
-                                    type: 'text/plain'
-                                });
-                                var m3u8_blob_url = URL.createObjectURL(m3u8_blob);
-                                var new_arg = arguments;
-                                new_arg[0] = m3u8_blob_url;
-                                NOMO_DEBUG("step2", m3u8_blob_url);
-                                // 10초 후 REVOKE 되도록 설정
-                                setTimeout(function(){URL.revokeObjectURL(m3u8_blob_url)},10000);
-                                return originalFetch.apply(this, new_arg);
-                            }
-                            else{
-                                // 원하는 서버를 찾지 못한 경우
-                                NOMO_DEBUG("원하는 서버를 찾지 못했다", FIXER_SERVER, cluster_str);
-                                FIXER_count = FIXER_count + 1;
-                            }
+                                // Loader 표시를 위해 postMessage 보내기
+                                postMessage({"id":0,"type":"tsi_fixer","arg":"","fixed":{"FIXED":FIXED,"CURRENT_SERVER":cluster_str,"FIXER_count":FIXER_count}});
 
-                            // 여기까지 온 경우 FIXER_DELAY 간격으로 재시도
-                            await sleep(FIXER_DELAY);
-                        }   // while 문 끝
+                                // 원하는 서버를 찾은 경우 or 최대 카운트에 도달한 경우
+                                if(FIXED || FIXER_count === FIXER_ATTEMPT_MAX){
+                                    // blob 로 만들어서 리턴한다.
+                                    var m3u8_blob = new Blob([m3u8_text], {
+                                        type: 'text/plain'
+                                    });
+                                    var m3u8_blob_url = URL.createObjectURL(m3u8_blob);
+                                    var new_arg = arguments;
+                                    new_arg[0] = m3u8_blob_url;
+                                    NOMO_DEBUG("step2", m3u8_blob_url);
+                                    // 10초 후 REVOKE 되도록 설정
+                                    setTimeout(function(){URL.revokeObjectURL(m3u8_blob_url)},10000);
+                                    return originalFetch.apply(this, new_arg);
+                                }
+                                else{
+                                    // 원하는 서버를 찾지 못한 경우
+                                    NOMO_DEBUG("원하는 서버를 찾지 못했다", FIXER_SERVER, cluster_str);
+                                    FIXER_count = FIXER_count + 1;
+                                }
+
+                                // 여기까지 온 경우 FIXER_DELAY 간격으로 재시도
+                                await sleep(FIXER_DELAY);
+                            }   // while 문 끝
+                        };  // ServerFix ON인 경우에만 작동 끝
                     }   // 반복을 위한 if 문 끝
 
                     return originalFetch.apply(this, arguments);
