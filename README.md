@@ -22,7 +22,7 @@ Toolbar 의 Tampermonkey 아이콘 - Twitch-Server-Info - Change Notification Se
 - Firefox - [Tampermonkey](https://addons.mozilla.org/ko/firefox/addon/tampermonkey/)
 - Chrome - [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=ko)
 - Opera - [Tampermonkey](https://addons.opera.com/extensions/details/tampermonkey-beta/)
-- Safari Safari 12+ | MacOS 10.14.4+ - [Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id1482490089)
+- Safari 12+ | MacOS 10.14.4+ - [Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id1482490089)
 - Safari 6-12 - [Tampermonkey](https://safari.tampermonkey.net/tampermonkey.safariextz)
 - Edge - [Tampermonkey](https://www.microsoft.com/store/p/tampermonkey/9nblggh5162s)
   
