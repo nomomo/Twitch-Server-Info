@@ -529,7 +529,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             NOMO_DEBUG("첫 채널 접속 시 URL 감지됨", input);
                             
                             // ServerFix = true일 때 반복 시작
-                            if(Fixer == true){
+                            if(FIXER == true){
                                 while(!FIXED && FIXER_count <= FIXER_ATTEMPT_MAX){
                                     NOMO_DEBUG("서버 자동 잡기 시도 중...");
                                     NOMO_DEBUG("현재 시도 수", (FIXER_count) + " / " + FIXER_ATTEMPT_MAX);
