@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.7
+// @version     0.0.8
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -474,8 +474,13 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     NOMO_DEBUG("ajax response", response);
                 })
                 .fail(function (error) {
-                    myBlob = "importScripts('https://cvp.twitch.tv/2.14.0/wasmworker.min.js')";
-                    NOMO_DEBUG("Request failed", error);
+                    if(error.responseText !== undefined && error.responseText.indexOf("importScripts") !== -1){
+                        myBlob = error.responseText;
+                    }
+                    else{
+                        myBlob = "importScripts('https://cvp.twitch.tv/2.14.0/wasmworker.min.js')";
+                        NOMO_DEBUG("Request failed", error.status, error);
+                    }
                 })
                 .always(function (com) {
                     NOMO_DEBUG("Complete", com);
