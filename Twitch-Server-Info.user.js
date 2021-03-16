@@ -36,8 +36,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                 var d = this;
                 var h = d.getHours() % 12;
 
-                return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p|amp)/gi, function () {
-                    switch () {
+                return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p|amp)/gi, function ($1) {
+                    switch ($1) {
                         case "yyyy":
                             return d.getFullYear();
                         case "yy":
@@ -61,7 +61,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                         case "amp":
                             return d.getHours() < 12 ? "AM" : "PM";
                         default:
-                            return ;
+                            return $1;
                     }
                 });
             };
