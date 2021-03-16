@@ -40,6 +40,8 @@ Toolbar 의 Tampermonkey 아이콘 - Twitch-Server-Info - Change Notification Se
 버그 많음 버그리포트 바랍니다 (__) nomotg@gmail.com
 
 ## Change log
+### 0.0.9 (2021-03-16)
+- JQuery Library 의 http 요청 관련 문제 수정
 ### 0.0.8 (2019-12-09)
 - 특정 환경에서 twitch.tv 의 클립, 지난 동영상이 재생되지 않는 문제 개선
 ### 0.0.7 (2019-10-27)
