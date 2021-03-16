@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.8
+// @version     0.0.9
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -10,7 +10,7 @@
 // @downloadURL https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/Twitch-Server-Info.user.js
 // @updateURL   https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/Twitch-Server-Info.user.js
 // @include     *://*.twitch.tv/*
-// @require     http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js
+// @require     https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js
 // @run-at      document-start
 // @grant       GM_addStyle
 // @grant       GM_setValue
@@ -36,8 +36,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                 var d = this;
                 var h = d.getHours() % 12;
 
-                return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p|amp)/gi, function ($1) {
-                    switch ($1) {
+                return f.replace(/(yyyy|yy|MM|dd|E|hh|mm|ss|a\/p|amp)/gi, function () {
+                    switch () {
                         case "yyyy":
                             return d.getFullYear();
                         case "yy":
@@ -61,7 +61,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                         case "amp":
                             return d.getHours() < 12 ? "AM" : "PM";
                         default:
-                            return $1;
+                            return ;
                     }
                 });
             };
