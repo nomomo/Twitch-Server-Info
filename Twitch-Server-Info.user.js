@@ -10,7 +10,7 @@
 // @downloadURL https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/Twitch-Server-Info.user.js
 // @updateURL   https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/Twitch-Server-Info.user.js
 // @include     *://*.twitch.tv/*
-// @require     http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js
+// @require     https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js
 // @run-at      document-start
 // @grant       GM_addStyle
 // @grant       GM_setValue
