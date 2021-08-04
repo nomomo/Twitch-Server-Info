@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.0.8
+// @version     0.0.9
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -458,33 +458,15 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             var newInput = String(input);
             NOMO_DEBUG("newInput", newInput);
 
-            // 19-09-18 기준 wasmworker 버전: 2.14.0
-            var myBlob = "importScripts('https://cvp.twitch.tv/2.14.0/wasmworker.min.js')"; // ""
+            var myBlob = "importScripts('https://static.twitchcdn.net/assets/amazon-ivs-wasmworker.min-7da53ec1e6fb32a92d1d.js');";
 
-            // worker 버전이 바뀔 수도 있으므로 매번 체크
-            // return 해야 하므로 async false 사용. 성능에는 별 영향 없다.
-            $.ajax({
-                    url: newInput,
-                    type: "GET",
-                    async: false,
-                    timeout: 2000,
-                })
-                .done(function (response) {
-                    myBlob = response;
-                    NOMO_DEBUG("ajax response", response);
-                })
-                .fail(function (error) {
-                    if(error.responseText !== undefined && error.responseText.indexOf("importScripts") !== -1){
-                        myBlob = error.responseText;
-                    }
-                    else{
-                        myBlob = "importScripts('https://cvp.twitch.tv/2.14.0/wasmworker.min.js')";
-                        NOMO_DEBUG("Request failed", error.status, error);
-                    }
-                })
-                .always(function (com) {
-                    NOMO_DEBUG("Complete", com);
-                });
+            var req = new XMLHttpRequest();
+            req.open('GET', newInput, false);
+            req.send();
+            var resText = req.responseText;
+            if(req.status == 200 || req.status == 201){
+                myBlob = resText;
+            }
 
             // blob 다시쓰기
             var workerBlob = new Blob(
@@ -643,7 +625,6 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     };
 
                     ${myBlob};
-                    //importScripts('https://cvp.twitch.tv/2.14.0/worker.min.js');
 
                     // message 수신 덮어쓰기
                     // setTimeout(function(){
@@ -661,7 +642,15 @@ if (window.TWITCH_SERVER_INFO === undefined) {
             // blob 다시쓰기 끝
 
             var workerBlobUrl = URL.createObjectURL(workerBlob);
-            var my_worker = new realWorker(workerBlobUrl);
+            var workerBlobWrapper = new Blob(
+                [ /*javascript*/ `
+                importScripts('${workerBlobUrl}');
+               `], {
+                    type: 'text/javascript'
+                });
+
+            var workerBlobWrapperUrl = URL.createObjectURL(workerBlobWrapper);
+            var my_worker = new realWorker(workerBlobWrapperUrl);
 
             ////////////////////////////////////////////////////////////////////////////////////
             // Worker 밖에서 postMessage 수신 및 DOM 생성
