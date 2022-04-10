@@ -91,3 +91,7 @@ A: 현재 지원하지 않습니다. 꼭 필요한 경우 멀티트위치를 사
 ### 0.0.1 (2019-09-19)
 
 - 현재 서버 주소 / 위치 표시 기능 추가
+
+## Happy??
+
+<a href="https://www.buymeacoffee.com/nomomo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="60"></a>　<a href="https://toon.at/donate/636947867320352181" target="_blank"><img src="https://raw.githubusercontent.com/nomomo/Addostream/master/assets/toonation_b11.gif" height="60" alt="Donate with Toonation" /></a>
