@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.1.1
+// @version     0.1.2
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -267,57 +267,72 @@ if (window.TWITCH_SERVER_INFO === undefined) {
 
         // 서버 리스트 2
         // 다음을 참고: https://twitchstatus.com/
-        var server_list_2 = [
-            ["hkg", "AS: Hong Kong"],
-            ["sel", "AS: Seoul, South Korea"],
-            ["sin", "AS: Singapore"],
-            ["tpe", "AS: Taipei, Taiwan"],
-            ["tyo", "AS: Tokyo, Japan"],
-            ["syd", "AU: Sydney"],
-            ["lis", "DEPRECATED Europe: Portugal, Lisbon"],
-            ["scl", "South America: Chile"],
-            ["lim", "DEPRECATED South America: Lima, Peru"],
-            ["mde", "DEPRECATED South America: Medellin, Colombia"],
-            ["gig", "DEPRECATED South America: Rio de Janeiro, Brazil"],
-            ["gru", "DEPRECATED South America: Sao Paulo, Brazil"],
-            ["bue", "South America: Argentina"],
-            ["vie", "Europe: Austria, Vienna"],
-            ["cph", "Europe: Copenhagen, Denmark"],
-            ["prg", "Europe: Czech Republic, Prague"],
-            ["hel", "Europe: Finland, Helsinki"],
-            ["mrs", "Europe: France, Marseille"],
-            ["cdg", "Europe: France, Paris"],
-            ["ber", "Europe: Germany, Berlin"],
-            ["fra", "Europe: Germany, Frankfurt"],
-            ["mil", "Europe: Italy, Milan"],
-            ["ams", "Europe: Netherlands, Amsterdam"],
-            ["osl", "Europe: Norway, Oslo"],
-            ["waw", "Europe: Poland, Warsaw"],
-            ["mad", "Europe: Spain, Madrid"],
-            ["arn", "Europe: Sweden, Stockholm"],
-            ["lhr", "Europe: United Kingdom, London"],
-            ["ymq", "NA: Quebec, Canada"],
-            ["qro", "NA: Queretaro, Mexico"],
-            ["yto", "NA: Toronto, Canada"],
-            ["slc", "Salt Lake City, UT"],
-            ["sea", "Seattle, WA"],
-            ["rio", "South America: Rio de Janeiro, Brazil"],
-            ["sao", "South America: Sao Paulo, Brazil"],
-            ["dfw", "US Central: Dallas, TX"],
-            ["den", "US Central: Denver, CO"],
-            ["hou", "US Central: Houston, TX"],
-            ["iad", "US East: Ashburn, VA"],
-            ["atl", "US East: Atlanta, GA"],
-            ["ord", "US East: Chicago"],
-            ["mia", "US East: Miami, FL"],
-            ["jfk", "US East: New York, NY"],
-            ["lax", "US West: Los Angeles, CA"],
-            ["phx", "US West: Phoenix, AZ"],
-            ["pdx", "US West: Portland, Oregon"],
-            ["sfo", "US West: San Francisco, CA"],
-            ["sjc", "US West: San Jose,CA"],
-            ["akamai", "Akamai"],
-        ];
+        var server_list_2 = {
+            "hkg":"AS: Hong Kong",
+            "blr":"AS: India, Bangalore",
+            "maa":"AS: India, Chennai",
+            "hyd":"AS: India, Hyderabad",
+            "bom":"AS: India, Mumbai",
+            "del":"AS: India, New Delhi",
+            "jkt01":"AS: Indonesia, Cikarang Barat",
+            "jkt02":"AS: Indonesia, Jakarta",
+            "osa":"AS: Japan, Osaka",
+            "tyo":"AS: Japan, Tokyo",
+            "mnl":"AS: Manila, Philippines",
+            "sin":"AS: Singapore",
+            "sel":"AS: South Korea, Seoul",
+            "tpe":"AS: Taiwan, Taipei",
+            "bkk":"AS: Thailand, Bangkok",
+            "vie":"Europe: Austria, Vienna",
+            "prg":"Europe: Czech Republic, Prague",
+            "cph":"Europe: Copenhagen, Denmark",
+            "hel":"Europe: Finland, Helsinki",
+            "mrs":"Europe: France, Marseille",
+            "cdg":"Europe: France, Paris",
+            "ber":"Europe: Germany, Berlin",
+            "dus":"Europe: Germany, Dusseldorf",
+            "fra":"Europe: Germany, Frankfurt",
+            "muc":"Europe: Germany, Munich",
+            "mil":"Europe: Italy, Milan",
+            "ams":"Europe: Netherlands, Amsterdam",
+            "osl":"Europe: Norway, Oslo",
+            "waw":"Europe: Poland, Warsaw",
+            "mad":"Europe: Spain, Madrid",
+            "arn":"Europe: Sweden, Stockholm",
+            "lhr":"Europe: UK, London",
+            "ymq":"NA: Canada, Quebec",
+            "yto":"NA: Canada, Toronto",
+            "qro":"NA: Mexico, Queretaro",
+            "syd":"Oceania: AU, Sydney",
+            "scl":"South America: chile, Santiago",
+            "for":"South America: Brazil, Fortaleza",
+            "rio":"South America: Brazil, Rio de Janeiro",
+            "sao":"South America: Brazil, Sao Paulo",
+            "bue":"South America: Buenos Aires, Argentina",
+            "bog":"South America: Colombia, Bogota",
+            "dfw":"US Central: Dallas, TX",
+            "den":"US Central: Denver, CO",
+            "iah":"US Central: Houston, TX",
+            "hou":"US Central: Houston, TX",    // old
+            "iad":"US East: Ashburn, VA",
+            "atl":"US East: Atlanta, GA",
+            "ord":"US East: Chicago, IL",
+            "mia":"US East: Miami, FL",
+            "jfk":"US East: New York, NY",
+            "lax":"US West: Los Angeles, CA",
+            "phx":"US West: Phoenix, AZ",
+            "pdx":"US West: Portland, OR",
+            "slc":"Salt Lake City, UT",
+            "sfo":"US West: San Francisco, CA",
+            "sjc":"US West: San Jose, CA",
+            "sea":"Seattle, WA",
+            "lis":"DEPRECATED Europe: Portugal, Lisbon",
+            "lim":"DEPRECATED South America: Lima, Peru",
+            "mde":"DEPRECATED South America: Medellin, Colombia",
+            "gig":"DEPRECATED South America: Rio de Janeiro, Brazil",
+            "gru":"DEPRECATED South America: Sao Paulo, Brazil",
+            "akamai":"Akamai"
+        };
 
         // 스타일 추가
         if (typeof GM_addStyle === "function") {
@@ -553,9 +568,12 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                                 server_str = "AKAMAI";
                                 server_name = "<br />(AKAMAI)";
                             } else {
-                                for (i = 0; i < server_list_2.length; i++) {
-                                    if (server_str.indexOf(server_list_2[i][0]) !== -1) {
-                                        server_name = "<br />(" + server_list_2[i][0].toUpperCase() + " / " + server_list_2[i][1] + ")";
+                                let serverKeys = Object.keys(server_list_2);
+                                for (i = 0; i < serverKeys.length; i++) {
+                                    let key = serverKeys[i];
+                                    if (server_str.indexOf(key) !== -1) {
+                                        let desc = server_list_2[key];
+                                        server_name = "<br />(" + key.toUpperCase() + " / " + desc + ")";
                                         break;
                                     }
                                 }
