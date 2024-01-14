@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Twitch-Server-Info
 // @namespace   Twitch-Server-Info
-// @version     0.1.3
+// @version     0.1.4
 // @author      Nomo
 // @description Check Twitch server location.
 // @icon        https://raw.githubusercontent.com/nomomo/Twitch-Server-Info/master/images/logo.png
@@ -770,17 +770,20 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     // Hijacking & overriding the fetch function inside a worker
                     const originalFetch = self.fetch;
                     self.fetch = async function(input, init){
+                        // Fixed a conflict with TTV LOL PRO
+                        let inputUrl = (input instanceof Request ? input.url : input.toString());
+
                         // Sending messages out of the worker
-                        postMessage({"id":0,"type":"tsi","arg":(input instanceof Request ? input.url : input.toString()),"fixed":{"FIXED":FIXED,"FIXER_count":FIXER_count}});
+                        postMessage({"id":0,"type":"tsi","arg":inputUrl,"fixed":{"FIXED":FIXED,"FIXER_count":FIXER_count}});
 
                         // Server Fixer (Auto Reconnector)
                         if(FIXER
                             && FIXER_SERVER !== undefined 
                             && FIXER_SERVER.length > 0 
-                            && input.indexOf('usher.ttvnw.net/api/channel/hls') !== -1){
+                            && inputUrl.indexOf('usher.ttvnw.net/api/channel/hls') !== -1){
                             FIXED = false;
                             FIXER_count = 1;
-                            NOMO_DEBUG("URL detected on first channel connection", input);
+                            NOMO_DEBUG("URL detected on first channel connection", inputUrl);
                             
                             // start iteration
                             while(!FIXED && FIXER_count <= FIXER_ATTEMPT_MAX){
@@ -847,10 +850,10 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                         }   // end of if for iteration
 
                         // To debug M3U8
-                        if(DEBUG_M3U8 && input.toLowerCase().indexOf(".m3u8") !== -1){
+                        if(DEBUG_M3U8 && inputUrl.toLowerCase().indexOf(".m3u8") !== -1){
                             var m3u8_fetch = await originalFetch.apply(this, arguments);
                             var m3u8_text = await m3u8_fetch.text();
-                            NOMO_DEBUG("\\n", input, "\\n", (new Date()), "\\n", m3u8_text);
+                            NOMO_DEBUG("\\n", inputUrl, "\\n", (new Date()), "\\n", m3u8_text);
                             // return as blob
                             var m3u8_blob = new Blob([m3u8_text], {
                                 type: 'text/plain'
@@ -864,8 +867,8 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                             return originalFetch.apply(this, new_arg);
                         }
 
-                        if(DEBUG_WORKER && input.toLowerCase().indexOf('usher.ttvnw.net/api/channel/hls') !== -1){
-                            NOMO_DEBUG("master playlist m3u8 \\n" + input);
+                        if(DEBUG_WORKER && inputUrl.toLowerCase().indexOf('usher.ttvnw.net/api/channel/hls') !== -1){
+                            NOMO_DEBUG("master playlist m3u8 \\n" + inputUrl);
                         }
 
                         return originalFetch.apply(this, arguments);
