@@ -771,7 +771,7 @@ if (window.TWITCH_SERVER_INFO === undefined) {
                     const originalFetch = self.fetch;
                     self.fetch = async function(input, init){
                         // Sending messages out of the worker
-                        postMessage({"id":0,"type":"tsi","arg":input,"fixed":{"FIXED":FIXED,"FIXER_count":FIXER_count}});
+                        postMessage({"id":0,"type":"tsi","arg":(input instanceof Request ? input.url : input.toString()),"fixed":{"FIXED":FIXED,"FIXER_count":FIXER_count}});
 
                         // Server Fixer (Auto Reconnector)
                         if(FIXER
