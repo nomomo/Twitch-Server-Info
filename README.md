@@ -1,5 +1,7 @@
 # Twitch-Server-Info
 
+> **Important: As a Korean developer, I no longer plan to actively maintain this script as Twitch has shut down operations in South Korea. Check [this article](https://blog.twitch.tv/en/2023/12/05/an-update-on-twitch-in-korea/) for more information.**
+
 트위치 서버 이름을 화면에 표시해주는 UserScript
 
 ## Preview
